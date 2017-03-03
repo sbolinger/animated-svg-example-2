@@ -1,0 +1,174 @@
+<!doctype html>
+<html>
+
+	<head>
+		
+		<title>Animated SVG Example #1</title>
+		
+		<style>
+		
+		#circles {
+			cursor: pointer;
+		}
+		
+		</style>
+		
+		<script>
+		
+			function initAnimation() {
+				var rectangle = {x:0, y:0, width:300, height:250};
+				var scale = 2;
+
+				var animationTime;
+
+				var rectRotation = 0;
+				var rectRotationSpeed = .05;
+				var rectRotationDirection = 1;
+
+				var ringTime;
+				var ringBlurMax = 10;
+				var ringTotalDuration = 500;
+				var ringMaxScale = 3;
+				var ringCurrentTime = 0;
+
+				var proximityPercentange = 0;
+
+				function handleMouseMove (e) {	
+					var distance = calculateDistance({x:e.x, y:e.y}, {x:scale * rectangle.width / 2, y:scale * rectangle.height / 2});
+
+					proximityPercentange = ((scale * rectangle.height / 2) - Math.round(Math.min(scale * rectangle.height / 2, distance))) / (scale * rectangle.height / 2);
+				}
+
+				function handleMouseClick (e) {
+					rectRotationDirection *= -1;
+					ringCurrentTime = 0;
+					ringTime = NaN;
+					scaleRing();
+				}
+
+				function scaleRing () {
+					if(ringCurrentTime < ringTotalDuration){		
+				    	requestAnimationFrame(scaleRing);
+					} else {		
+						circle1.setAttribute('transform', 'scale(1)');
+						colorizeCircle();
+						return;
+					}
+	
+				    var now = new Date().getTime();
+					var dt = now - (ringTime || now);
+ 
+				    ringTime = now;
+
+					ringCurrentTime += dt;
+	
+					var animationProgress = Math.min(1, ringCurrentTime / ringTotalDuration);
+	
+					var newScale = 1 + (animationProgress * (ringMaxScale - 1));
+	
+					circle1.setAttribute('transform', 'scale(' + newScale + ')');
+				}
+
+				function colorizeCircle () {	
+					var red = parseInt(Math.random()*155) + 100;
+					var green = parseInt(Math.random()*155) + 100;
+					var blue = parseInt(Math.random()*155) + 100;
+	
+					var newColor = 'rgb(' + red + ', ' + green + ', ' + blue + ')';
+
+					circle1.setAttribute("stroke", newColor);
+					circle2.setAttribute("fill", newColor);
+					rect1.setAttribute("stroke", newColor);
+				}
+
+				// Animation function
+				function updateAnimation () {
+				    requestAnimationFrame(updateAnimation);
+	
+					var now = new Date().getTime();
+					var dt = now - (animationTime || now);
+
+					animationTime = now;
+
+					// Animate square
+					rectRotation += rectRotationDirection * ((rectRotationSpeed + (.2 * proximityPercentange)) * dt);
+					rect1.setAttribute('transform', 'rotate(' + rectRotation + ' ' + rectangle.width / 2 + ' ' + rectangle.height / 2 + ')');
+
+					// Animate outer ring
+					gaussianBlur.setAttribute('stdDeviation', Math.max(.1, proximityPercentange * ringBlurMax));
+
+					// Animate inner circle
+					var scaleX = 1 - (proximityPercentange * (Math.random() * .25));
+					var scaleY = 1 - (proximityPercentange * (Math.random() * .25));
+					var rotation = (proximityPercentange * (Math.random() * 90));
+
+					circle3.setAttribute('transform', 'scale(' + scaleX + ' ' + scaleY + ')');
+					
+				}
+
+				// Mouse Event listeners
+				circles.addEventListener('mouseenter', function (e) {
+					handleMouseMove(e);
+				});
+
+				circles.addEventListener('mousemove', function (e) {
+					handleMouseMove(e);
+				});
+
+				circles.addEventListener('mouseleave', function (e) {	
+					proximityPercentange = 0;
+				});
+
+				circles.addEventListener('click', function (e) {	
+					handleMouseClick(e);
+				});
+
+				// Utility functions
+				function calculateDistance (point1, point2) {	
+					return Math.sqrt(Math.pow((point2.x - point1.x), 2) + Math.pow((point2.y - point1.y), 2));
+				}
+
+				updateAnimation();
+			}
+		
+		</script>
+	
+	</head>
+
+	<body onload="initAnimation()">
+
+		<svg id="circles" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="600" height="500" viewBox="0 0 300 250" xml:space="preserve">
+	
+			<filter id="gaussianBlurFilter" x="-150" y="-125" width="300" height="250">
+	
+				<feGaussianBlur id="gaussianBlur" in="SourceGraphic" stdDeviation=".1" />
+		
+			</filter>
+	
+			<g id="parentContainer">
+				
+				<rect id="background" x="0" y="0" width="300" height="250" fill="#000" />
+		
+				<g id="circle1Container" transform="translate(150, 125)">
+		
+					<circle id="circle1" r="90" fill="none" stroke="#FFFFFF" opacity="1" stroke-width="6" filter="url(#gaussianBlurFilter)" />
+			
+				</g>
+	
+				<rect id="rect1" x="95" y="70" width="110" height="110" fill="none" stroke="#FFFFFF" opacity="1" stroke-width="6" />
+	
+				<circle id="circle2" cx="150" cy="125" r="45" fill="#FFFFFF" stroke="none" opacity="1" />
+		
+				<g id="circle3Container" transform="translate(150, 125)">
+		
+					<circle id="circle3" r="39" fill="#000" stroke="none" transform="scale(1, 1)" opacity="1" />
+			
+				</g>
+	
+			</g>
+				
+		</svg>
+
+	</body>
+
+</html>
